@@ -1,0 +1,91 @@
+// Tudor Maria-Elena 311CA
+
+Firstly, my program uses two structs: image_t and coordinates_t.
+
+Image_t is basically where the image is stored: the first two letters are
+stored in magicword, the maximum value in maxvalue (which is 255 for all the 
+pictures I've encountered in this homework), then width and height (they will
+be used for the selection made on the image later), the values selected being
+stored in the double pointer mat. The double pointer copy is actually the full
+matrix, "a copy" of the first selection (the full image) when the image is
+loaded, with its dimensions, hcopy and wcopy. At first, all the dimensions
+are "started" at 0 (function start) to help the program tell when no image has
+been loaded.
+
+Coordinates_t stores the coordinates that might be read when a selection is
+made on the matrix. When an image is selected fully (at the beginning or when
+there is a SELECT ALL command or just when the coordinates for the SELECT
+command happen to correspond with the full image), this coordinates are 
+"started" (function start2) at -1, so that the program knows to work with a 
+full selection.
+
+For every command received, the programm will first check if it's a valid one 
+and then execute what is needed.
+
+LOAD
+For a valid load command, when the file can be opened, I first read the magicword, 
+width, height, maximum value and all other comments that might have been 
+scattered through these values, then, based on what type of image it is, I
+continue reading from it or I use fseek to tell me the position the cursor was
+in and open the file to read the binary values of the matrix of pixels.
+
+SELECT (ALL)
+For these two commands, I first check if the command is SELECT ALL, where I
+use the copy I made when the image was loaded, to bring the selection matrix
+to the original dimensions. If it's not a SELECT ALL command, I try to read
+the coordinates from the command, and if they're valid, I use the copy, very
+easily going through it with the use of the coordinates.
+
+HISTOGRAM
+For the making of the histogram, I also use the copy of the original matrix
+to make the operations needed. I first use a frequency array to store the
+number of apparitions of the values, then for each interval (256 / y numbers)
+I calculate the total apparitions for the respective bin and find the maximum
+among them. After that I simply use the given formula to calculate the number
+of stars.
+
+EQUALIZE
+This command also makes use of a frequency array which then is later used to
+calculate the sum of the apparitions of the numbers smaller or equal to the last
+value of the pixel. This command is the one that doesn't do well for the test
+that my program doesn't pass, but I have no idea in what other order I should've
+put the operations to not get the pixel difference bigger than 5. (I tried too 
+many of them)
+
+ROTATE
+I use a new matrix here in which I store the values needed, using formulas that
+I came up with after countless tries on paper. Whenever a matrix is rotated, a
+link forms between the new coordinates and the old ones. Lines will help to 
+figure out the new columns and vice-versa (for the +-90 / +-270 rotations), 
+while the 180 rotations use the old lines to figure out the new lines and the
+old columns for the new columns. After the values of the new rotated matrix have
+been filled in, I make sure both of my matrixes (img.mat and img.copy) change 
+acoording to the rotation. The PPM images were especially hard to figure out, 
+because I had to move all of the three values that represented a pixel without 
+changing their order. 
+
+CROP
+A valid CROP command just changes the original matrix with the matrix I used for
+the selection (img.mat) and then restarts the coordinates, as that means no 
+selection was made on the new picture.
+
+APPLY
+For this command, based on the parameter it receives, I first fill in the values
+of the kernel that is needed, and then go to the original matrix and based on the
+selection I make the changes needed. For every pixel in the image that has enough
+neighbours, it becomes the center of the minimatrix that is going to be used for
+the interactions with the kernel. After this I make sure to copy the new values
+of the pixels in my two matrixes.
+
+SAVE
+For this command, if the command also has the word "ascii", I write all ofthe values
+in a text file. If it doesn't then I write as text only the first lines that contain
+the magic word, the dimensions and the maximum vaLue, then for the binary values of
+the matrix, I used a pointer to write one line of the matrix at once as I kept getting 
+timed out in tests because it took too long to write value by value. When I had to 
+write in a binary file, I also had to make sure that the number I write has the size
+of one byte (same when I am reading binary for LOAD), so I used unsigned char values.
+
+EXIT
+For EXIT, I just make sure to free the two matrixes I use for my struct, because the 
+other resources I alloc, I also free after I stopped using them in the programm.
